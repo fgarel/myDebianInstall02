@@ -1,0 +1,10 @@
+drop table litto3D;
+
+create table litto3D(
+    x integer,
+    y integer,
+    z numeric (6,2)
+    --z character varying(6)
+);
+
+copy litto3D ("x", "y", "z") from stdin delimiter ',';

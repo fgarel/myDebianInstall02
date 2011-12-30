@@ -1,0 +1,13 @@
+#!/bin/csh
+# Example of a simple location map
+pscoast –R0/360/-90/90 –JG-111/45/4.5i –Bg30 –Dc –A8000 \
+  -G10/10/10 –W3/10/10/10 –P –K >! globe.ps
+psxy –R –JG –W6/255/0/0 –P –O –Am << END >> globe.ps
+-100 40
+-100 50
+-120 50
+-120 40
+-100 40
+END
+gs –sDEVICE=x11 globe.ps
+

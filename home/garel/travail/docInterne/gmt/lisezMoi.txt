@@ -1,0 +1,112 @@
+
+Manipulation des fichiers IGN MNT ASC LITTO3D
+
+1.     Introduction
+
+       La litto3D a ete fournie sous la forme de plusieurs fichiers portant l'extension .ASC
+       Ces fichiers ne sont pas directement integrables ni sous geomedia, ni sous postgis (via gdal).
+       Par contre, d'autres outils vont nous etre utiles pour manipuler ces fichiers
+
+       Ces outils sont (Generic Mapping Tools) (GMT) et Global Mapper
+
+2.     Procédure pour obtenir un semi de point au format vectoriel SIG
+2.1.   Transformation des fichiers ASC en fichier NC
+       NC veut dire NetCdf.
+       Dans la pratique, un fichier NC, c'est un fichier grid (GRD)
+       Cette transformation du fichier ascii vers un fichier grid se fait grace
+       a la commande xyz2grd de l'outil GMT
+       cf script ign2grd.sh
+       Ce script est a continuer....
+
+2.2.   Transformation des fichiers ASC en fichier XYZ
+       Independament du script présenté ci dessus, un processus est lancé en paralèlle
+       Ce processus consiste a utiliser un outil propriétaire, global mapper, qui est capable
+       d'ouvrir les fichiers de l'Ign, en précisant toutefois le système de projection utilisé,
+       ici le lambert 93, cad EPSG:2154,
+       puis de sauvegarder dans un fichier au format xyz
+
+2.3.   Import des fichiers XYZ vers postgresql
+       Transfert des fichiers textes dans une base postgresql
+
+2.3.1. Creation d'une base de données litto3D
+       ssh root@dsiappli14
+       su postgres
+       createdb -E UTF8 litto3d
+       createlang plpgsql litto3d
+       psql -d litto3d -f /usr/share/postgresql/8.4/contrib/postgis-1.5/postgis.sql
+       psql -d litto3d -f /usr/share/postgresql/8.4/contrib/postgis-1.5/spatial_ref_sys.sql
+       psql -d litto3d -c "CREATE USER fred with password 'Mie3Asie';"
+       psql -d litto3d -c "GRANT ALL PRIVILEGES ON DATABASE litto3d TO fred;"
+       psql -d litto3d -e "GRANT SELECT ON TABLE spatial_ref_sys TO fred;"
+       psql -d litto3d -e "GRANT ALL ON TABLE geometry_columns TO fred;"
+
+2.3.2. Execution d'un script qui realise l'import
+       cf xyz2psql.sh
+       cat LaRochelle/larochelleL93.xyz > larochelleL93extract.xyz
+       cat data_header_litto3D.txt larochelleL93extract.xyz > larochelleL93.sql
+       #cat data_header_litto3D.txt LaRochelle/larochelleL93.xyz > larochelleL93.sql
+       psql -h dsiappli14 -U contrib -d litto3D -f larochelleL93.sql
+
+2.4.   Traitement sous postgis
+       Sous Postgis, une fois que l'on a une table avec 3 colonnes, on va rajouté une colonne
+       qui va nous servir à stocker la geomtrie du point
+       cf traitement.sql
+2.5.   Export de postgresql vers shape ou vers mapinfo
+       A l'aide de la commande ogr2ogr, on va pouvoir exporter le resultat vers un fichier shapefile
+       ou mifmid.
+
+
+3.     Generic Mapping Tools (GMT)
+3.1.   Installation et Configuration de GMT
+3.1.1. Installation 
+       sudo aptitude install gmt gmt-examples gmt-tutorial
+3.1.2. Configuration
+       cf (kubuntu blog "Generic Mapping Tools (GMT) pour tracer des cartes sous Ubuntu")
+       vi ~/.bashrc
+       # gmt variables
+       export NETCDFHOME=/usr/lib
+       export GMTHOME=/usr/lib/gmt
+       export PATH=$PATH:$GMTHOME/bin
+3.2.   Premiers tests
+3.2.1. gmt-examples
+       On recopie les exemples dans le repertoire de l'utilisateur
+       cd ~/travail/docInterne/gmt
+       cp -r /usr/share/doc/gmt-examples .
+       Suite a ce déplacemnt, il faut modifier le fichier functions.sh
+       cd /gmt-examples/examples/
+       vi functions.sh
+       #srcdir=`cd ../../../../../src;pwd`
+       srcdir=`cd /usr/src;pwd`
+       On execute le script qui execute les exemples
+       cd /gmt-examples/examples/
+       ./do-examples.sh
+       On modifie le script qui permet de visualiser les résultats
+       vi do_view.sh
+
+       #viewer=${1:-gv}
+       viewer=${1:-evince}
+       #for f in ex??/example_*.ps
+       for f in example_*.ps
+       do
+           BASENAME=`basename $f .ps`
+           ps2pdf $f
+           #$viewer $f
+           $viewer $BASENAME.pdf
+           #echo $BASENAME.pdf
+       done
+3.2.2. cours de michael.thorne
+       cd ~/travail/docInterne/gmt/
+       mkdir thorne
+       cd thorne
+       recuperation des scripts et des devoirs maisons "homework"
+       cp ~/doc/gmt/homework/HW6_Data/celsius.cpt .
+       cp ~/doc/gmt/homework/HW6_Data/s20rts.grd .
+       cp ~/doc/gmt/scripts/* .
+       recuperation des fichiers palettes
+       wget http://soliton.vm.bytemark.co.uk/pub/cpt-city/wkp/country/wiki-tunis-gulf.cpt 
+       creation d'une palette personnalisé de -5 à 35 mètres
+       makecpt -Cwiki-tunis-gulf.cpt -Z -T-5/35/5 >! relief.cpt
+
+
+Recuperation des donnes coast : 
+elles sont a placer dans le repertoire /usr/share/coast

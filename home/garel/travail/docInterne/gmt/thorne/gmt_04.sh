@@ -1,0 +1,49 @@
+#!/bin/csh
+
+# recuperation de la palette
+# recuperation des fichiers palettes
+wget -nv \
+     -q \
+     -N \
+     http://soliton.vm.bytemark.co.uk/pub/cpt-city/wkp/country/wiki-tunis-gulf.cpt \
+     -O wiki-tunis-gulf.cpt 
+
+# creation d'une palette personnalisé de -5 à 35 mètres
+#makecpt -Cwiki-tunis-gulf.cpt \
+#        -T-5/35/5 >! relief.cpt
+
+        
+# barre d'echelle y=18.5
+# Add a scale bar of the colors
+psscale -D12.35c/18.5c/29.7c/1ch \
+        -Cwiki-tunis-gulf.cpt \
+        -B200 \
+        -K >! gmt_04.ps
+
+# barre d'echelle y=9.9
+# Add a scale bar of the colors
+psscale -D12.35c/9.9c/29.7c/1ch \
+        -Cwiki-tunis-gulf.cpt \
+        -B200 \
+        -K \
+        -O >> gmt_04.ps
+
+# barre d'echelle y=8.9
+# Add a scale bar of the colors
+psscale -D12.35c/8.9c/29.7c/1ch \
+        -Crelief.cpt \
+        -B5 \
+        -K \
+        -O >> gmt_04.ps
+
+# barre d'echelle y=-0.7
+# Add a scale bar of the colors
+psscale -D12.35c/-0.7c/29.7c/1ch \
+        -Crelief.cpt \
+        -B5 \
+        -O >> gmt_04.ps
+
+#gs -sDEVICE=x11 gmt_04.ps
+ps2pdf -sPAPERSIZE=a4 gmt_04.ps
+evince gmt_04.pdf
+
