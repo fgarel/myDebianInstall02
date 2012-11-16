@@ -1,0 +1,6 @@
+Networkx est une librairie python pour manipuler des graphes
+
+1. installation de networkx
+   aptitude install python-networkx
+2. premier utilisation
+

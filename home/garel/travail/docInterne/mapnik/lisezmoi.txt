@@ -1,0 +1,394 @@
+divers idées concernant l'utilisation de mapnik
+
+1.       Introduction
+         Le but de ce document est de décrire l'un des axes du projet "plan de ville"
+         Ce projet s'articule autour de plusieurs axes :
+           - representation/rendu : pour arriver à satisfaire nos exigences de rendu,
+             nous avons choisi d'utiliser Mapnik tel qu'il est utilisé dans la suite d'outil
+             "OpenStreet Map"
+           - calcul : les différents calculs de graphe seront réalisés grace à l'utilisation
+             de pgrouting (cf pgrouting.txt)
+           - normalisation / reprise des données existantes : les données existantes 
+             (voirie filaire, données de la CDA, données pages jaunes,...)
+             doivent etre normalisées et les numéros de
+             voies sont à géocoder.
+             La normalisation et le geocodage seront rendus possibles grace à 
+             l'utilisation de "jdonref"
+
+         Ce document détaille la mise en oeuvre de mapnik en tant que composante OpenStreet Map.
+         Les autres axes, (pgrouting, jdonref, etc...) sont détaillés dans d'autres documents
+         anexes.
+
+1.1.     Le projet "Open Street Map"
+         Ce projet a l'air très bien organisé
+         et l'idée est d'utiliser les différentes briques de ce projet
+
+         Mapnik est la brique pour le rendu, mais on peut utiliser d'autres briques :
+           - par exemple l'editeur "java open street map" (JOSM) (outil en java)
+           - ogr2ogr pour convertir des donnes de type shape vers le format gpx
+
+1.2.     Nos objectifs et nos contraintes
+         Nous souhaitons installer et utiliser un outil nous permettant de :
+           - diffuser nos données "Plan de Ville"
+           - creer, modifier ces données
+           - effectuer des traitements sur ces données
+
+         En reprenant la liste ci-dessus et en examinant certains détails, nous pouvons
+         développer certains points.
+
+         Par exemple, le problème de l'edition de nos données
+           - est lié à l'utilisation de plusieurs sources d'informations :
+               - photos aériennes pour la géométrie
+               - données vectorielles actuelles, avec les noms de voies
+
+           - mais est aussi lié à ses utilisations futures qui imposent des
+             contraintes différentes pour la structuration de nos données
+               - representation selon la chartre graphique "open street map" 
+                 ou un autre sld ou gss ou cascadnick ou autre
+               - graphe avec pgrouting
+
+1.3.     Procédure pour la mise à jour des données "Plan ville"
+         Une vision tres simplifié de notre processus de mise à jour pourrait etre :
+           1 JOSM + plugin WMS
+           2 numérisation des données et enregistrement en .osm
+           3 utilisation de osm2pgsql
+           4 rendu grace à mapnik
+
+1.4.     Documentations externes
+         Divers informations relatives à l'utilisation de mapnik
+         des infos sur cascadenik et quantumnik sont ici
+         http://code.google.com/p/mapnik-utils
+         http://teczno.com/cascadnik-openstreetmap/
+         http://mapsfromscratch.com/notes.html
+         mais on trouve aussi la procédure pour l'installation de qgis avec le plugin quantumnik
+         dans le repertoire ~/install/qgis
+
+2.       Mise en oeuvre
+         Dans ce second chapitre, nous developperons l'installation de mapnik ainsi
+         que son utilisation en tant que serveur dédié au dessin de cartes
+2.1.     la documentation de reference est :
+         http://wiki.openstreetmap.org/wiki/Mapnik
+         et meme en français :
+         http://wiki.openstreetmap.org/wiki/FR:Mapnik
+         Un tres bon complement à cette doc initiale a ete trouve ici
+         (plus particulierment pour les infos consistant à mettre mapnik en daemon à cote d'apache)
+         http://www.drazzib.com/projets:openstreetmap:postgis_mapnik_tile_server
+2.2.     Premiere partie de l'installation des serveurs logiciels (demons) et utilitaires
+         L'infrastructure repose sur la mise ne oeuvre de plusieurs processus serveurs dédiés à 
+         certaines taches :
+           - postgresql      (2.2.1.) (1ere partie)
+           - apache          (2.4.1.) (3eme partie)
+         Ces processus serveurs sont accompagnés de différents utilitaires 
+           - osm2pgsql       (2.2.2.) (1ere partie)
+           - osm2pgrouting   (2.2.2.) (1ere partie)
+           - josm            (2.2.3.) (1ere partie)
+           - osmosis         (2.2.3.) (1ere partie)
+           - mapnik          (2.3.1.) (2de partie)
+           - osm-mapnik      (2.3.2.) (2de partie)
+           - ocitysmap       (2.4.2.) (3eme partie)
+           - mapsomatic
+           - ...
+2.2.1.   Postgresql
+         Le serveur de base de données est installé sur la machine
+         128.156.21.157
+2.2.1.1. Installation de postgresql et postgis
+         aptitude install  postgresql-8.3-postgis
+2.2.2.2. Creation d'un utilisateur "fred" et d'une base de données "mapnikTest"
+         garel$ su
+         # su postgres
+         postgres$ createuser fred
+         postgres$ psql -d template1 -c "alter user fred with password 'fred';"
+         postgres$ exit
+         # vi /etc/postgresql/8.3/main/pg_hba.conf
+
+         # "local" is for Unix domain socket connections only
+         local   all         all                               md5
+
+         # IPv4 local connections:
+         hostssl   all   all   127.0.0.1/32   md5
+
+         # IPv4 local connections:
+         hostssl   all   all   127.0.0.1/32   md5
+         hostssl   all   all   128.156.0.0/16   md5
+         # IPv6 local connections:
+         hostssl   all   all   ::1/128   md5
+
+         # IPv4 local connections:
+         hostssl   all   all   127.0.0.1/32   md5
+         hostssl   all   all   128.156.0.0/16   md5
+         hostnossl   all   all   127.0.0.1/32   md5
+         hostnossl   all   all   128.156.0.0/16   md5
+         # IPv6 local connections:
+         hostssl   all   all   ::1/128   md5
+
+         # vi /etc/postgresql/8.3/main/postgresql.conf
+
+         # - Connection Settings -
+         listen_addresses = '*'   
+
+         # /etc/init.d/postgresql restart
+         # su postgres
+         postgres$ createdb -E UTF8 -O fred -U fred mapnikTest
+         postgres$ createlang plpgsql -U fred mapnikTest
+         postgres$ exit
+         # exit
+         garel$ 
+         garel$ psql -U fred -d mapnikTest -f /usr/share/postgresql-8.3-postgis/lwpostgis.sql
+         garel$ psql -U fred -d mapnikTest -f /usr/share/postgresql-8.3-postgis/spatial_ref_sys.sql
+         garel$ echo "ALTER TABLE geometry_columns OWNER TO fred; 
+                      ALTER TABLE spatial_ref_sys OWNER TO fred;"  | psql -U fred -d mapnikTest
+
+2.2.2.   Installation d'utilitaires pour la conversion de données osm vers postgresql
+2.2.2.1. Installation de l'utilitaire osm2pgsql
+         osm2pgsql un un utilitaire qui permet d'importer un fichier .osm dans postgis
+         la methode simple serait bien evidemment de faire :
+           aptitude install osm2pgsql
+         seulement, il y a un hic : nous avons besoin des fichiers annexes comme 900913.sql
+         la solution est donc de telecharger la version svn
+         sur une machine ayant un acces svn, on execute :
+         svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/ osm2pgsql
+         puis on depose le contenu vers dsigeomatiquecluster :
+         scp -r osm2pgsql garel@128.156.22.13:workspace
+2.2.2.2. Ajout du systeme de projection 900913
+         Le systeme de projection 900913 n'est pas inclus par defaut dans une base postgis,
+         il est à rajouter à la main.
+         Le rajout de ce sytème se fait apres l'installation de osm2pgsql
+         garel$ cd ~/workspace/osm2pgsql/
+         garel$ psql -h localhost -U fred -f 900913.sql -d mapnikTest
+2.2.2.3. Installation de l'utilitaire osm2pgrouting
+         cf pgrouting.txt
+2.2.3.   Outils pour la manipulation et la recuperation de fichier osm
+         La recuperation de fichier osm depuis openstreetmap
+         La manipulation des données (leurs mises à jours, modifications, etc)
+         peut s'effectuer à l'aide de deux utilitaires
+           - le premier, osmosis, en ligne de commande, n'est pas décrit ici,
+             bien qu'il offre des possibilités
+             très interessantes pour la mise a jour automatique de nos données extraites
+             (à l'aide d'un script cron)
+           - le second outil, josm, est un outil en mode graphique, developpé en java,
+             et très ergonomique à manipuler
+
+2.2.3.1. Installation et utilisation d'osmosis
+         http://www.drazzib.com/projets:openstreetmap:postgis_mapnik_tile_server
+2.2.3.2. Installation et utilisation de josm
+         Cet utilitaire est installé, puis executé avec "sun java 6 runtime"
+
+2.2.4.   Tests de nos premieres installations
+         Apres avoir effectué quelques operations d'installation et de paramètrage de notre
+         environnement de travail, il est temps de passer à quelques tests d'utilisation.
+         Nous allons orgniser nos repertoires de la façon suivante :
+           - ~/workspace/data/   => les données
+         Pour notre premier test, nous allons utiliser les données initiales :
+           - un fichier "osm" correpondant aux données de La Rochelle
+         Pour notre second test, que nous effecturerons et détaillerons au paragraphe 2.3.3.,
+         nous utiliserons des donnée supplémentaires, récupérées sur le web.
+           - fichiers "shape" correspondant aux frontieres et traits de cotes
+             sur l'ensemble du globe
+2.2.4.1. Recuperation des données sur le quartier de fetilly (à l'aide de josm)
+         Pour cela on utilise josm, on obtient donc un fichier fetilly.osm vers postgresql1 vers postgresql
+         On copie ce fichier sur le serveur, au bon endroit
+         scp garel@128.156.160.7:/home/garel/workspace/mapnikTest/*.osm /home/garel/workspace/data
+2.2.4.2. On utilise ensuite osm2pgsql
+         osm2pgsql -U fred \
+                   -d mapnikTest \
+                   -E 27562 \
+                   fetilly.osm
+2.2.4.3. Verification de ce premier import
+         psql -U fred -d mapnikTest
+2.2.4.4. Recuperation du jeu de données "traits de cotes" (fichiers shape)
+         3 fichiers sont à recupérés
+         1 de ces fichiers est au format bzip
+         sudo aptitude install bzip2
+         cd ~/workspace/data
+         wget http://artem.dev.openstreetmap.org/files/world_boundaries.tar.bz2
+         tar xjvf world_boundaries.tar.bz2
+         cela fabrique le sous-repertoire suivant
+         ~/workspace/data/world_boundaries
+         wget http://tile.openstreetmap.org/shoreline_300.tar.bz2
+         tar xfvf shoreline_300.tar.bz3
+         mv shoreline* world_boundaries
+         wget http://beta.letuffe.org/ressources/world_boundaries/compressed/processed_p.zip
+         unzip processed_p.zip -d world_boundaries
+         cd /home/garel/workspace/data/world_boundaries/coastlines/
+         mv processed_p.* ..
+         cd ..
+         rmdir coastlines
+2.2.4.6. On importe ces données dans postgis en utilisant osm2pgsql
+         osm2pgsql -U fred \
+                   -d mapnikTest \
+                   -E 27562 \
+                   fetilly.osm
+2.3.     Deuxième partie de l'installation : les bases de mapnik
+         On suit le tuto de l'installation 
+         Un tres bon complement à la doc initial se trouve ici
+         http://www.drazzib.com/projets:openstreetmap:postgis_mapnik_tile_server
+         Dans la première partie, nous avons abordé l'utilisation des outils autour du
+         format "osm" à l'exception de mapnik.
+         Dans cette deuxième partie, nous allons abordé l'utilisatation de l'outil "mapnik".
+2.3.1.   Mapnik
+         soit on installe mapnik avec les paquets debian
+         soit on installe mapnik à partir des sources svn
+         aptitude install python-mapnik/testing
+         on peut suivre les tutorial 1 et 2 sur http://trac.mapnik.org/
+         Installation à partir des sources
+2.3.1.1. Installation des dépendances
+         # freetype-config
+         sudo aptitude install libfreetype6-dev
+         # xml2-config
+         sudo aptitude install libxml2-dev/testing 
+         # pkg-config
+         sudo aptitude install pkg-config
+         # cairomm-1.0
+         sudo aptitude install libcairomm-1.0-dev/stable
+         sudo aptitude install python-cairo-dev
+         # ltdl
+         sudo aptitude install libltdl-dev/testing
+         # tiff
+         sudo aptiude install libtiff4-dev/testing
+         # icuuc
+         sudo aptitude install libicu-dev/testing
+         sudo aptitude install python-pyicu/testing
+         # libstdc++
+         sudo aptitude install libstdc++6-4.4-dev/testing
+         sudo aptitude install libboost-dev/testing
+         sudo aptitude install libboost-filesystem-dev/testing
+         sudo aptitude install libboost-python-dev/testing
+         sudo aptitude install libboost-regex-dev/testing
+         sudo aptitude install libboost-iostreams-dev/testing
+         sudo aptitude install libboost-thread-dev/testing
+         sudo aptitude install libboost-program-options-dev/testing
+         sudo aptitude install libgdal1-dev/testing
+         sudo aptitude install libsoci-core-gcc-dev/testing
+2.3.1.2. recupération des sources et compilation
+         cd ~/workspace
+         svn co http://svn.mapnik.org/trunk mapnik
+         cd mapnik
+         python scons/scons.py configure INPUT_PLUGINS=all \
+                                         OPTIMIZATION=3 \
+                                         SYSTEM_FONTS=/usr/share/fonts/truetype/ttf-dejavu/
+         python scons/scons.py
+         sudo python scons/scons.py install
+2.3.1.3. Premier test de l'installation de mapnik
+         #export LD_LIBRARY_PATH=/usr/local/lib
+         #sudo ldconfig -p | grep /usr/local/lib
+         python
+         import mapnik
+2.3.1.4. Second test de l'installation de mapnik
+         Récupération de données sur le web
+         http://mapnik-utils.googlecode.com/svn/data/world_borders.zip
+         que l'on place dans le repertoire ~/workspace/data/world_boudaries
+         On creé ensuite, comme indiqué dans http://trac.mapnik.org/wiki/GettingStarted,
+         un fichier tutorial3.py
+         cd ~/workspce/mapnik
+         vi tutorial.py
+           #!/usr/bin/env python
+
+           import mapnik
+           m = mapnik.Map(600,300,"+proj=latlong +datum=WGS84")
+           m.background = mapnik.Color('steelblue')
+           s = mapnik.Style()
+           r=mapnik.Rule()
+           r.symbols.append(mapnik.PolygonSymbolizer(mapnik.Color('#f2eff9')))
+           r.symbols.append(mapnik.LineSymbolizer(mapnik.Color('rgb(50%,50%,50%)'),0.1))
+           s.rules.append(r)
+           m.append_style('My Style',s)
+           lyr = mapnik.Layer('world',"+proj=latlong +datum=WGS84")
+           lyr.datasource = mapnik.Shapefile(file='/home/garel/workspace/data/world_boundaries/world_borders')
+           lyr.styles.append('My Style')
+           m.layers.append(lyr)
+           m.zoom_to_box(lyr.envelope())
+           mapnik.render_to_file(m,'world.png', 'png')
+         
+         Puis, on lance l'execution de ce fichier
+         python /home/garel/workspace/mapnik/tutorial3.py
+         qui nous genere un fichier world.png
+2.3.1.5. Troisieme test de mapnik
+         sudo aptitude install python-nose/testing
+         cd ~/workspace/mapnik/test/
+         python cairo_test.py
+         python .....py
+2.3.1.6. quatrième test de mapnik          
+         cd ~/workspace/mapnik/demo/python
+         vi rundemo.py
+           aux lignes 63 et 283, suppression de encoding='latin1'
+           puis, soit
+             - mise en commentaire des lignes 317, 333, 338, 343 (mapnik.render) 
+             - modification de la taille de la box à la ligne 313
+               m.zoom_to_box(mapnik.Envelope(-802000, 544000, -738000, 566000))
+         python rundemo.py
+2.3.2.   Outil osm-mapnik
+         Installation et utilisation d'osm-mapnik, outil specifique à osm pour
+         l'integration de mapnik en tant que moteur de rendu
+         cd /home/garel/workspace/mapnikTest
+         svn co http://svn.openstreetmap.org/applications/rendering/mapnik osm-mapnik
+2.3.3.   Tests des outils installés dans cette deuxième partie
+         L'idée de ce test est de generer un fichier de configuration et d'utiliser
+         mapnik avec ce fichier de configuration.
+         Pour ce test, nous aurons besoins de récupérer des données supplémentaires
+         sur le web, et que l'on placera dans
+         ~/workspace/data
+         Les donnée supplémentaires, récupérées sur le web :
+           - fichiers "shape" correspondant aux frontieres et traits de cotes
+             sur l'ensemble du globe
+2.3.3.1. Recuperation du jeu de données "traits de cotes" (fichiers shape)
+         3 fichiers sont à recupérés
+         1 de ces fichiers est au format bzip
+         sudo aptitude install bzip2
+         cd ~/workspace/data
+         wget http://artem.dev.openstreetmap.org/files/world_boundaries.tar.bz2
+         tar xjvf world_boundaries.tar.bz2
+         cela fabrique le sous-repertoire suivant
+         ~/workspace/data/world_boundaries
+         wget http://tile.openstreetmap.org/shoreline_300.tar.bz2
+         tar xfvf shoreline_300.tar.bz3
+         mv shoreline* world_boundaries
+         wget http://beta.letuffe.org/ressources/world_boundaries/compressed/processed_p.zip
+         unzip processed_p.zip -d world_boundaries
+         cd /home/garel/workspace/data/world_boundaries/coastlines/
+         mv processed_p.* ..
+         cd ..
+         rmdir coastlines
+2.3.3.2. Generation d'un fichier osm.xml
+         Un fichier de configuration generaliste peut etre telechargé à partir de cette adresse 
+         http://trac.openstreetmap.org/browser/applications/rendering/mapnik/osm.xml
+         Mais nous allons plutot utiliser un outil pour fabriquer un fichier osm.xml
+         Ce fichier osm.xml est un fichier qui defini les regles de representation (rendu/style)
+         cd osm-mapnik
+         vi set-mapnik-env
+           EXPORT MAPNIK_MAP_FILE=~/workspace/osm-mapnik/osm.xml
+           EXPORT MAPNIK_SYMBOLS_DIR=~/workspace/osm-mapnik/symbols
+           EXPORT MAPNIK_WORLD_BOUNDARIES_DIR=~/workspace/data/world_boundaries
+           EXPORT MAPNIK_TILE_DIR=~/workspace/osm-mapnik/tiles/
+           EXPORT MAPNIK_DBHOST="128.156.160.7"
+           EXPORT MAPNIK_DBNAME="mapnikTest"
+           EXPORT MAPNIK_DBUSER="fred"
+           EXPORT MAPNIK_DBPASS="fred"
+           EXPORT MAPNIK_PREFIX=""
+         source ./set-mapnik-env
+         ./customize-mapnik-map > osm.xml
+2.3.3.3. Utilisation de ce fichier osm.xml
+         On peut maintenant tester mapnik en executant le script generate_image.py
+         cd ~/workspace/osm-mapnik/
+         ./generate_image.py
+         On recupere par defaut une image dont l'enveloppe geographique est celle du royaume uni
+         On modifie le fichier generate_image.py pour obtenir une image de La Rochelle
+         vi generate_image.py
+         # royaume uni
+         ll = (-6.5, 49.5, 2.1, 59)
+         # la rochelle centre sur -1.20 et 46.15
+         ll = (-1.26, 46.12, -1.14, 46.18)   
+         ./generate_image.py
+2.4.     Troisième partie de l'installation : mapnik en mode web
+         Dans la deuxième partie, nous avons abordé l'utilisation basique de mapnik,
+         c'est à dire, en mode autonome.
+         Dans la troisième partie, nous aborderons l'utilisation de mapnik en tant
+         qu'outil annexé au serveur web Apache, c'est à dire en tant que serveur
+         de dalles.
+2.4.1.   Installation de modtile pour apache2
+         recuperation des sources de modtile
+         cd ~/workspace/mapnikTest/
+         svn co http://svn.openstreetmap.org/applications/utils/mod_tile mod_tile
+
+
+
+
