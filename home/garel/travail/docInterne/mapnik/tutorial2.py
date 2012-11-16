@@ -20,20 +20,21 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-import mapnik
+import mapnik2
 mapfile = 'tutorial2.xml'
+map_output = '~/geodata/raster/world/hello_world_using_xml_config.png'
 map_output = 'hello_world_using_xml_config.png'
 
 # Instantiate a map object with given width, height and spatial reference system
 #m = mapnik.Map(600,300,"+proj=latlong +datum=WGS84")
-m = mapnik.Map(600,300)
+m = mapnik2.Map(600,300)
 
-mapnik.load_map(m, mapfile)
-bbox = mapnik.Envelope(mapnik.Coord(-180.0, -90.0), mapnik.Coord(180.0, 90.0))
+mapnik2.load_map(m, mapfile)
+bbox = mapnik2.Envelope(mapnik2.Coord(-180.0, -90.0), mapnik2.Coord(180.0, 90.0))
 m.zoom_to_box(bbox) 
 
 # Write the data to a png image called world.png in the base directory of your user
-mapnik.render_to_file(m, map_output)
+mapnik2.render_to_file(m, map_output)
 
 
 # Exit the python interpreter

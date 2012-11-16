@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE Map>
-<Map bgcolor="steelblue" srs="+proj=latlong +datum=WGS84">
+<Map background-color="steelblue" srs="+proj=latlong +datum=WGS84">
 
   <Style name="My Style">
     <Rule>
@@ -14,11 +14,11 @@
     </Rule>
   </Style>
 
-  <Layer name="world" srs="+proj=latlong +datum=WGS84">
+  <Layer name="ne_110m_admin_0_countries" srs="+proj=latlong +datum=WGS84">
     <StyleName>My Style</StyleName>
     <Datasource>
       <Parameter name="type">shape</Parameter>
-      <Parameter name="file">/home/garel/workspace/mapnikTest/world_borders</Parameter>
+      <Parameter name="file">/home/garel/geodata/vecteur/world/ne_110m_admin_0_countries.shp</Parameter>
     </Datasource>
   </Layer>
 
