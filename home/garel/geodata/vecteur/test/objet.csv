@@ -1,0 +1,8 @@
+ id_objet    type_objet    type_primitive    id_primitive
+ 1           enveloppe     face              1
+ 2           route         arc               2
+ 3           route         arc               3
+ 4           route         arc               4
+ 5           route         arc               5
+ 6           bati          face              2
+ 7           bati          face              3
