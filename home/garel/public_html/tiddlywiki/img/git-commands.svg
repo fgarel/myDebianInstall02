@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 725 550" width="181.25mm" height="137.5mm">
+   <!-- working tree -->
+   <text x="50" y="25" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">Working tree</text>
+   <path d="M 50 30 L 50 550" fill="none" stroke="#000000" stroke-width="2"/>
+
+   <!-- stash -->
+   <text x="200" y="25" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">Stash</text>
+   <path d="M 200 30 L 200 550" fill="none" stroke="#000000" stroke-width="2"/>
+
+   <!-- staging area -->
+   <text x="350" y="25" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">Staging area</text>
+   <path d="M 350 30 L 350 550" fill="none" stroke="#000000" stroke-width="2"/>
+
+   <!-- local repository -->
+   <text x="500" y="25" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">Local repository</text>
+   <path d="M 500 30 L 500 550" fill="none" stroke="#000000" stroke-width="2"/>
+
+   <!-- remote repository -->
+   <text x="650" y="25" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">Remote repository</text>
+   <path d="M 650 30 L 650 550" fill="none" stroke="#000000" stroke-width="2"/>
+
+   <!-- git stash save -->
+   <polygon points="50,50 175,50 175,40 198,60 175,80 175,70 50,70" fill="#80e080" stroke="#000000" stroke-width="2"/>
+   <text x="125" y="65" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">stash save</text>
+
+   <!-- git stash pop/apply -->
+   <polygon points="200,100 75,100 75,90 52,110 75,130 75,120 200,120" fill="#80e080" stroke="#000000" stroke-width="2"/>
+   <text x="125" y="115" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">stash pop/apply</text>
+
+   <!-- git add/rm -->
+   <polygon points="50,150 325,150 325,140 348,160 325,180 325,170 50,170" fill="#80e0e0" stroke="#000000" stroke-width="2"/>
+   <text x="200" y="165" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">add/rm</text>
+
+   <!-- git commit -->
+   <polygon points="350,150 475,150 475,140 498,160 475,180 475,170 350,170" fill="#80e0e0" stroke="#000000" stroke-width="2"/>
+   <text x="425" y="165" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">commit</text>
+
+   <!-- git commit -a -->
+   <polygon points="50,200 475,200 475,190 498,210 475,230 475,220 50,220" fill="#80e0e0" stroke="#000000" stroke-width="2"/>
+   <text x="275" y="215" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">commit -a </text>
+
+   <!-- git push -->
+   <polygon points="500,175 625,175 625,165 648,185 625,205 625,195 500,195" fill="#e0e080" stroke="#000000" stroke-width="2"/>
+   <text x="575" y="190" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">push</text>
+
+   <!-- git fetch -->
+   <polygon points="650,250 525,250 525,240 502,260 525,280 525,270 650,270" fill="#e0e080" stroke="#000000" stroke-width="2"/>
+   <text x="575" y="265" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">fetch</text>
+
+   <!-- git rebase -->
+   <polygon points="500,250 75,250 75,240 52,260 75,280 75,270 500,270" fill="#e0e080" stroke="#000000" stroke-width="2"/>
+   <text x="275" y="265" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">rebase</text>
+
+   <!-- git pull -->
+   <polygon points="650,300 75,300 75,290 52,310 75,330 75,320 650,320" fill="#e0e080" stroke="#000000" stroke-width="2"/>
+   <text x="350" y="315" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">pull</text>
+
+   <!-- git checkout -->
+   <polygon points="350,350 75,350 75,340 52,360 75,380 75,370 350,370" fill="#e08080" stroke="#000000" stroke-width="2"/>
+   <text x="200" y="365" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">checkout</text>
+
+   <!-- git checkout HEAD -->
+   <polygon points="500,400 75,400 75,390 52,410 75,430 75,420 500,420" fill="#e08080" stroke="#000000" stroke-width="2"/>
+   <text x="275" y="415" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">checkout HEAD</text>
+
+   <!-- git diff -->
+   <polygon points="348,460 325,440 325,450 75,450 75,440 52,460 75,480 75,470 325,470 325,480" fill="#8080e0" stroke="#000000" stroke-width="2"/>
+   <text x="200" y="465" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">diff</text>
+
+   <!-- git diff cached -->
+   <polygon points="498,460 475,440 475,450 375,450 375,440 352,460 375,480 375,470 475,470 475,480" fill="#8080e0" stroke="#000000" stroke-width="2"/>
+   <text x="425" y="465" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">diff --cached</text>
+
+   <!-- git diff HEAD -->
+   <polygon points="498,510 475,490 475,500 75,500 75,490 52,510 75,530 75,520 475,520 475,530" fill="#8080e0" stroke="#000000" stroke-width="2"/>
+   <text x="275" y="515" font-family="sans" font-size="15" fill="#000000" style="text-anchor:middle">diff HEAD</text>
+</svg>
