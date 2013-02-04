@@ -109,17 +109,19 @@ def initialise():
     """
     initialisation du script : on prend les bons fichiers de départ
     """
-    os.system("rm -f data01.csv")
-    shutil.copy("/home/garel/f/vaccination/CartoVacLR2.csv", "data01.csv")
-    os.system("rm -f data02.csv")
-    os.system("tail -n+2 data01.csv > data02.csv")
-    os.system("rm -f data03.csv")
-    os.system("cut -f 1-4 -d ';' data02.csv > data03.csv")
+    #os.system("rm -f data01.csv")
+    #shutil.copy("/home/garel/f/vaccination/CartoVacLR2.csv", "data01.csv")
+    #os.system("rm -f data02.csv")
+    #os.system("tail -n+2 data01.csv > data02.csv")
+    #os.system("rm -f data03.csv")
+    #os.system("cut -f 1-4 -d ';' data02.csv > data03.csv")
+    pass
 
 
 if __name__ == "__main__":
     initialise()
-    MON_FICHIER_INI = codecs.open("data03.csv", encoding="latin1", mode="r")
+    #MON_FICHIER_INI = codecs.open("data03.csv", encoding="latin1", mode="r")
+    MON_FICHIER_INI = codecs.open("data_ini.csv", encoding="latin1", mode="r")
     MON_FICHIER_ZERO = codecs.open("data_zero.csv", encoding="utf-8", mode="w")
     MON_FICHIER_UN = codecs.open("data_un.csv", encoding="utf-8", mode="w")
     MON_FICHIER_PLUSIEURS = codecs.open("data_plusieurs.csv", \

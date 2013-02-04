@@ -1,0 +1,10 @@
+Geocodage
+
+Dans un fichier csv, nous avons un objet par ligne.
+Pour chacune des lignes nous avons une adresse postale.
+
+Le but est de transformer cette adresse postale en coordonnées XY.
+
+Pour cela, nous uilisons le module python geopy.
+
+
